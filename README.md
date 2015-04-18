@@ -1,11 +1,15 @@
-# paas
-Process as a Service
+# rx-process
+Process using ReactiveX `Observable`.
 
 ```scala
-import scala.sys.process._
-import scala.concurrent.ExecutionContext.Implicits.global
-import com.github.okapies.paas._
+import rx.Observer
+import com.github.okapies.rx.process._
 
-val f: Future[String] = Process("ls -l").??
-f.foreach(println)
+val builder = ReactiveProcessBuilder.linesBuilder("ls", "-al")
+val o = new Observer[String] {
+  def onNext(t: String) = println("received: " + t)
+  def onCompleted() = {}
+  def onError(e: Throwable) = {}
+}
+builder.stdout(o).start()
 ```
