@@ -5,7 +5,7 @@ import com.zaxxer.nuprocess.NuProcess;
 import rx.Observable;
 import rx.Observer;
 
-class ReactiveProcessImpl<T> implements ReactiveProcess<T> {
+class DefaultReactiveProcess<T> implements ReactiveProcess<T> {
 
     private final NuProcess process;
 
@@ -17,7 +17,7 @@ class ReactiveProcessImpl<T> implements ReactiveProcess<T> {
 
     private final Observable<Integer> exitCode;
 
-    public ReactiveProcessImpl(
+    public DefaultReactiveProcess(
             NuProcess process,
             Observer<T> stdin,
             Observable<T> stdout,
@@ -30,30 +30,32 @@ class ReactiveProcessImpl<T> implements ReactiveProcess<T> {
         this.exitCode = exitCode;
     }
 
+    @Override
+    public Observer<T> stdin() {
+        return this.stdin;
+    }
+
+    @Override
     public Observable<T> stdout() {
-        return stdout;
+        return this.stdout;
     }
 
+    @Override
     public Observable<T> stderr() {
-        return stderr;
+        return this.stderr;
     }
 
+    @Override
     public Observable<Integer> exitCode() {
         return this.exitCode;
     }
 
-    public void writeStdin(T t) {
-        stdin.onNext(t);
-    }
-
-    public void closeStdin() {
-        process.closeStdin();
-    }
-
+    @Override
     public void destroy() {
         process.destroy();
     }
 
+    @Override
     public boolean isRunning() {
         return process.isRunning();
     }

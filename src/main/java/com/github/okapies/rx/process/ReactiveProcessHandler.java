@@ -7,23 +7,18 @@ import com.zaxxer.nuprocess.NuProcessHandler;
 
 import rx.Observable;
 import rx.Observer;
-import rx.functions.Action1;
 import rx.subjects.AsyncSubject;
 import rx.subjects.PublishSubject;
 import rx.subjects.Subject;
 
 final class ReactiveProcessHandler implements NuProcessHandler {
 
-    private final Observable<ByteBuffer> inSubject;
-    private final Subject<ByteBuffer, ByteBuffer> outSubject = PublishSubject.<ByteBuffer>create();
-    private final Subject<ByteBuffer, ByteBuffer> errSubject = PublishSubject.<ByteBuffer>create();
-    private final Subject<Integer, Integer> exitCodeSubject = AsyncSubject.<Integer>create();
+    private final Subject<ByteBuffer, ByteBuffer> inSubject = PublishSubject.create();
+    private final Subject<ByteBuffer, ByteBuffer> outSubject = PublishSubject.create();
+    private final Subject<ByteBuffer, ByteBuffer> errSubject = PublishSubject.create();
+    private final Subject<Integer, Integer> exitCodeSubject = AsyncSubject.create();
 
-    public ReactiveProcessHandler(Observable<ByteBuffer> inSubject) {
-        this.inSubject = inSubject;
-    }
-
-    public Observable<ByteBuffer> stdin() {
+    public Observer<ByteBuffer> stdin() {
         return this.inSubject;
     }
 
@@ -40,9 +35,15 @@ final class ReactiveProcessHandler implements NuProcessHandler {
     }
 
     public void onStart(final NuProcess nuProcess) {
-        inSubject.subscribe(new Action1<ByteBuffer>() {
-            public void call(ByteBuffer buf) {
+        inSubject.subscribe(new Observer<ByteBuffer>() {
+            public void onNext(ByteBuffer buf) {
                 nuProcess.writeStdin(buf);
+            }
+            public void onCompleted() {
+                nuProcess.closeStdin();
+            }
+            public void onError(Throwable e) {
+                nuProcess.closeStdin();
             }
         });
     }
@@ -66,6 +67,9 @@ final class ReactiveProcessHandler implements NuProcessHandler {
     }
 
     public void onExit(int exitCode) {
+        inSubject.onCompleted();
+        outSubject.onCompleted();
+        errSubject.onCompleted();
         exitCodeSubject.onNext(exitCode);
         exitCodeSubject.onCompleted();
     }
