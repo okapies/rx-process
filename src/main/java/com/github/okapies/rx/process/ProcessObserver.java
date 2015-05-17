@@ -11,8 +11,6 @@ public interface ProcessObserver<T> {
 
     Observer<T> stderr();
 
-    Observable<T> serialize(Observable<ByteBuffer> o);
-
-    ByteBuffer deserialize(T t);
+    Observable.Operator<T, ByteBuffer> decoder();
 
 }

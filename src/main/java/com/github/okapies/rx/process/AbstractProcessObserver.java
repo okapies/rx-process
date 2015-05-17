@@ -13,10 +13,12 @@ public abstract class AbstractProcessObserver<T> implements ProcessObserver<T> {
         this.stderr = stderr;
     }
 
+    @Override
     public Observer<T> stdout() {
         return this.stdout;
     }
 
+    @Override
     public Observer<T> stderr() {
         return this.stderr;
     }

@@ -1,11 +1,14 @@
 package com.github.okapies.rx.process;
 
+import java.nio.ByteBuffer;
+
 import rx.Observable;
-import rx.Observer;
 
 public interface ReactiveProcess<T> {
 
-    Observer<T> stdin();
+    void writeStdin(ByteBuffer buffer);
+
+    void closeStdin();
 
     Observable<T> stdout();
 

@@ -1,15 +1,14 @@
 package com.github.okapies.rx.process;
 
+import java.nio.ByteBuffer;
+
 import com.zaxxer.nuprocess.NuProcess;
 
 import rx.Observable;
-import rx.Observer;
 
 class DefaultReactiveProcess<T> implements ReactiveProcess<T> {
 
     private final NuProcess process;
-
-    private final Observer<T> stdin;
 
     private final Observable<T> stdout;
 
@@ -19,20 +18,23 @@ class DefaultReactiveProcess<T> implements ReactiveProcess<T> {
 
     public DefaultReactiveProcess(
             NuProcess process,
-            Observer<T> stdin,
             Observable<T> stdout,
             Observable<T> stderr,
             Observable<Integer> exitCode) {
         this.process = process;
-        this.stdin = stdin;
         this.stdout = stdout;
         this.stderr = stderr;
         this.exitCode = exitCode;
     }
 
     @Override
-    public Observer<T> stdin() {
-        return this.stdin;
+    public void writeStdin(ByteBuffer buffer) {
+        process.writeStdin(buffer);
+    }
+
+    @Override
+    public void closeStdin() {
+        process.closeStdin();
     }
 
     @Override

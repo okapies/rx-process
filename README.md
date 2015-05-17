@@ -15,5 +15,5 @@ val o = new Observer[String] {
   def onCompleted() = println("### onCompleted")
   def onError(e: Throwable) = println(s"### onError: ${e}")
 }
-builder.start(new LineProcessObserver().stdout(o))
+builder.start(new ByLineProcessObserver().stdout(o))
 ```

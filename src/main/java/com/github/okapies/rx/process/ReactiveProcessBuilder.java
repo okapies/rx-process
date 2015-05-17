@@ -51,36 +51,58 @@ public class ReactiveProcessBuilder {
         return new ReactiveProcessBuilder(this.command, environment);
     }
 
+    public ReactiveProcessBuilder and(ReactiveProcessBuilder other) {
+        return null; // TODO
+    }
+
+    public ReactiveProcessBuilder or(ReactiveProcessBuilder other) {
+        return null; // TODO
+    }
+
+    public ReactiveProcessBuilder then(ReactiveProcessBuilder other) {
+        return null; // TODO
+    }
+
+    public ReactiveProcessBuilder pipe(ReactiveProcessBuilder other) {
+        return null; // TODO
+    }
+
+    @SuppressWarnings("unchecked")
     public <T> ReactiveProcess<T> start(ProcessObserver<T> observer) {
         ReactiveProcessHandler handler = new ReactiveProcessHandler();
 
-        Observer<ByteBuffer> stdin = handler.stdin();
-        Observer<T> inObserver = new Observer<T>() {
-            public void onNext(T t) {
-                stdin.onNext(observer.deserialize(t));
-            }
-            public void onCompleted() {
-                stdin.onCompleted();
-            }
-            public void onError(Throwable e) {
-                stdin.onError(e);
-            }
-        };
-
-        Observable<T> outObservable = observer.serialize(handler.stdout());
+        // stdout
+        Observable<T> outObservable;
+        Observable.Operator<T, ByteBuffer> decodeOut = observer.decoder();
+        if (decodeOut == null) {
+            // Note: T must be ByteBuffer
+            outObservable = (Observable<T>) handler.stdout();
+        } else {
+            outObservable = handler.stdout().lift(decodeOut);
+        }
         Observer<T> outObserver = observer.stdout();
         if (outObserver != null) {
             outObservable.subscribe(outObserver);
         }
 
-        Observable<T> errObservable = observer.serialize(handler.stderr());
+        // stderr
+        Observable<T> errObservable;
+        Observable.Operator<T, ByteBuffer> decodeErr = observer.decoder();
+        if (decodeErr == null) {
+            // Note: T must be ByteBuffer
+            errObservable = (Observable<T>) handler.stderr();
+        } else {
+            errObservable = handler.stderr().lift(decodeErr);
+        }
         Observer<T> errObserver = observer.stderr();
         if (errObserver != null) {
             errObservable.subscribe(errObserver);
         }
 
+        // exit code
         Observable<Integer> exitCodeObservable = handler.exitCode();
 
+        // run an observed process
         NuProcessBuilder builder = new NuProcessBuilder(handler, command);
         builder.environment().clear();
         builder.environment().putAll(environment);
@@ -88,14 +110,13 @@ public class ReactiveProcessBuilder {
 
         return new DefaultReactiveProcess<T>(
                 process,
-                inObserver,
                 outObservable,
                 errObservable,
                 exitCodeObservable);
     }
 
     public ReactiveProcess<ByteBuffer> start() {
-        return start(new ByteBufferProcessObserver());
+        return start(new RawProcessObserver());
     }
 
 }
