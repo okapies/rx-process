@@ -4,19 +4,15 @@ import java.nio.ByteBuffer;
 
 import rx.Observable;
 
-public interface ReactiveProcess<T> {
+public interface ReactiveProcess {
 
     void writeStdin(ByteBuffer buffer);
 
     void closeStdin();
 
-    Observable<T> stdout();
-
-    Observable<T> stderr();
-
     Observable<Integer> exitCode();
 
-    void destroy();
+    void destroy(boolean force);
 
     boolean isRunning();
 

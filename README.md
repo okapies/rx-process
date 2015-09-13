@@ -9,11 +9,11 @@ rx-process inherits all the settings, performance characteristics, and limitatio
 import rx.Observer
 import com.github.okapies.rx.process._
 
-val builder = new ReactiveProcessBuilder("ls", "-al")
+val cmd = ReactiveCommand.build("ls", "-al").decoder(new ByLineDecoder)
 val o = new Observer[String] {
   def onNext(t: String) = println(s"### onNext: '${t}' on ${Thread.currentThread().getName()}")
   def onCompleted() = println("### onCompleted")
   def onError(e: Throwable) = println(s"### onError: ${e}")
 }
-builder.start(new ByLineProcessObserver().stdout(o))
+cmd.run(new ProcessObserver().stdout(o))
 ```
