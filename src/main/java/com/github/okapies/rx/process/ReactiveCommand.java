@@ -100,32 +100,21 @@ public class ReactiveCommand<T> extends AbstractReactiveProcessBuilder<T> {
 
     @Override
     public ReactiveProcess run(ProcessObserver<T> observer) {
-        ReactiveProcessHandler<T> handler = ReactiveProcessHandler.create(decoder);
-
-        // subscribe to stdout
+        ReactiveProcessHandler<T> handler;
         if (observer != null) {
-            Observer<T> stdoutObserver = observer.stdout();
-            if (stdoutObserver != null) {
-                handler.decodedStdout().subscribe(stdoutObserver);
-            }
-        }
-
-        // subscribe to stderr
-        if (observer != null) {
-            Observer<T> stderrObserver = observer.stderr();
-            if (stderrObserver != null) {
-                handler.decodedStderr().subscribe(stderrObserver);
-            }
+            handler = new ReactiveProcessHandler<>(decoder, observer.stdout(), observer.stderr());
+        } else {
+            handler = new ReactiveProcessHandler<>(decoder, null, null);
         }
 
         // run an observed process
         NuProcessBuilder builder = new NuProcessBuilder(handler, command);
-        builder.setCwd(directory);
         builder.environment().clear();
         builder.environment().putAll(environment);
-        NuProcess process = builder.start();
+        builder.setCwd(directory);
+        builder.start();
 
-        return new DefaultReactiveProcess(process, handler.exitCode());
+        return handler.process();
     }
 
 }
